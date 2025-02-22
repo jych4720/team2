@@ -1,0 +1,12 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ movie_title }} - AI Description</title>
+</head>
+<body>
+    <h1>{{ movie_title }} - AI-Generated Description</h1>
+    <p>{{ ai_description }}</p>
+    <a href="{{ url_for('movie_detail', movie_id=movie_id) }}">Back to Movie Page</a>
+</body>
+</html>

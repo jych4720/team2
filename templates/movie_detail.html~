@@ -1,0 +1,68 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ movie.title }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { max-width: 700px; margin: auto; }
+        img { max-width: 100%; height: auto; }
+        .backdrop { width: 100%; max-height: 300px; object-fit: cover; }
+        .poster { width: 200px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Backdrop Image -->
+        {% if movie.backdrop_path %}
+            <img src="https://image.tmdb.org/t/p/w1280{{ movie.backdrop_path }}" class="backdrop" alt="Backdrop">
+        {% endif %}
+
+        <h1>{{ movie.title }} ({{ movie.release_date[:4] if movie.release_date else 'N/A' }})</h1>
+
+        <!-- Movie Poster -->
+        {% if movie.poster_path %}
+            <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="poster" alt="Movie Poster">
+        {% endif %}
+
+        <!-- Movie Details -->
+       <p><strong>Genres:</strong>
+    {% for genre in movie.genres %}
+        {{ genre.name }}{% if not loop.last %}, {% endif %}
+    {% endfor %}
+       </p>
+       
+        <p>Director: 
+    {% if director_id %}
+        <a href="/director/{{ director_id }}">{{ director }}</a>
+    {% else %}
+        {{ director }}
+    {% endif %}
+</p>
+        <p><strong>Runtime:</strong> {{ movie.runtime }} mins</p>
+        <p><strong>Rating:</strong> ⭐ {{ movie.vote_average }} / 10</p>
+        <p><strong>Popularity:</strong> {{ movie.popularity }}</p>
+        <p><strong>Release Date:</strong> {{ movie.release_date }}</p>
+
+        <!-- Overview -->
+        <p><strong>Overview:</strong> {{ movie.overview }}</p>
+
+        <!-- Cast (Top 5) -->
+        {% if cast %}
+            <h3>Top Cast:</h3>
+            <ul>
+                {% for actor in cast %}
+                    <li>{{ actor.name }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+
+<h3>AI-Generated Description</h3>
+<p>
+    <a href="{{ url_for('get_movie_description', movie_id=movie.id) }}">View AI-Generated Description</a>
+</p>
+        <a href="/">Back to Search</a>
+    </div>
+</body>
+</html>
