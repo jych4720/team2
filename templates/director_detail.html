@@ -13,15 +13,20 @@
 
     <h2>Biography</h2>
     <p>{{ director.biography }}</p>
+    <a href="{{ url_for('add_favorite_director', director_id=director_id, director_name=director.name) }}">Add to Favorites</a>
+    
+<h2>Movies Directed</h2>
+<ul>
+    {% for movie in unique_movies %}
+        <li>
+            <a href="{{ url_for('movie_detail', movie_id=movie.id) }}">
+                {{ movie.title }} ({{ movie.release_date }})
+            </a>
+        </li>
+    {% endfor %}
+</ul>
 
-    <h2>Movies Directed</h2>
-    <ul>
-        {% for movie in director.movies %}
-            <li>{{ movie.title }} ({{ movie.release_date }})</li>
-        {% endfor %}
-    </ul>
 
-    <!-- Link to generate AI description -->
     <h2>AI-Generated Director Description</h2>
     <a href="{{ url_for('director_description', director_id=director_id) }}">Generate AI Description</a>
 

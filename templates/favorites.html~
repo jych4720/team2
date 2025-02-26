@@ -1,0 +1,27 @@
+<h2>Favorite Movies</h2>
+<ul>
+    {% for movie in favorite_movies %}
+        <li>
+            <strong>{{ movie.title }}</strong> ({{ movie.user_input }})
+            <form method="POST" action="/favorites/update/movie">
+                <textarea name="comment_movie_{{ movie.id }}" placeholder="Add a comment...">{{ movie.user_input }}</textarea>
+                <button type="submit">Update</button>
+            </form>
+            <a href="/favorites/remove/movie/{{ movie.id }}">Remove</a>
+        </li>
+    {% endfor %}
+</ul>
+
+<h2>Favorite Directors</h2>
+<ul>
+    {% for director in favorite_directors %}
+        <li>
+            <strong>{{ director.name }}</strong> ({{ director.user_input }})
+            <form method="POST" action="/favorites/update/director">
+                <textarea name="comment_director_{{ director.id }}" placeholder="Add a comment...">{{ director.user_input }}</textarea>
+                <button type="submit">Update</button>
+            </form>
+            <a href="/favorites/remove/director/{{ director.id }}">Remove</a>
+        </li>
+    {% endfor %}
+</ul>

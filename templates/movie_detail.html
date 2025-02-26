@@ -1,37 +1,44 @@
-<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ movie.title }}</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        .container { max-width: 700px; margin: auto; }
-        img { max-width: 100%; height: auto; }
-        .backdrop { width: 100%; max-height: 300px; object-fit: cover; }
-        .poster { width: 200px; border-radius: 8px; }
-    </style>
+
 </head>
 <body>
     <div class="container">
-        <!-- Backdrop Image -->
+        
         {% if movie.backdrop_path %}
             <img src="https://image.tmdb.org/t/p/w1280{{ movie.backdrop_path }}" class="backdrop" alt="Backdrop">
         {% endif %}
-
         <h1>{{ movie.title }} ({{ movie.release_date[:4] if movie.release_date else 'N/A' }})</h1>
 
-        <!-- Movie Poster -->
+        
         {% if movie.poster_path %}
             <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="poster" alt="Movie Poster">
         {% endif %}
-
-        <!-- Movie Details -->
+       {% if quotes %}
+ 
+    <ul>
+        {% for quote in quotes %}
+            <span class="quote">{{ quote.quote }}</span> — {{ quote.actor_name }}
+        {% endfor %}
+    </ul>
+      <style>
+    .quote {
+      font-style: italic;
+      font-size: 1.5em;
+      color: #555;
+    }
+  </style>
+{% endif %}
+        
        <p><strong>Genres:</strong>
     {% for genre in movie.genres %}
         {{ genre.name }}{% if not loop.last %}, {% endif %}
     {% endfor %}
        </p>
-       
+
         <p>Director: 
     {% if director_id %}
         <a href="/director/{{ director_id }}">{{ director }}</a>
@@ -57,12 +64,12 @@
             </ul>
         {% endif %}
 
-
+<a href="{{ url_for('add_favorite_movie', movie_id=movie.id, movie_title=movie.title) }}">Add to Favorites</a>
 <h3>AI-Generated Description</h3>
 <p>
     <a href="{{ url_for('movie_description', movie_id=movie.id) }}">View AI-Generated Description</a>
 </p>
-        <a href="/">Back to Search</a>
+        <a href="/">Back to home</a>
     </div>
 </body>
 </html>
