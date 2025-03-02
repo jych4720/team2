@@ -1,9 +1,10 @@
-from flask import Flask, request, render_template,session,redirect,url_for
+from flask import Flask, request, render_template,session,redirect,url_for,send_file
 from flask_session import Session
 import requests
 import os
 from groq import Groq
 import random
+import json
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -156,17 +157,6 @@ def remove_favorite_movie(movie_id):
     session["favorites_movies"] = favorites_movies
     return redirect(url_for("favorites"))
 
-@app.route("/favorites/update/movie", methods=["POST"])
-def update_favorites_movie():
-    favorites_movies = session.get("favorites_movies", [])
-    
-    for movie in favorites_movies:
-        movie_id = movie["id"]
-        user_comment = request.form.get(f"comment_movie_{movie_id}")
-        movie["user_input"] = user_comment
-        
-    session["favorites_movies"] = favorites_movies
-    return redirect("/favorites")
 
 
 @app.route("/favorites/add/director/<int:director_id>/<string:director_name>")
@@ -184,17 +174,7 @@ def remove_favorite_director(director_id):
     session["favorites_directors"] = favorites_directors
     return redirect(url_for("favorites"))
 
-@app.route("/favorites/update/director", methods=["POST"])
-def update_favorites_director():
-    favorites_directors = session.get("favorites_directors", [])
-    
-    for director in favorites_directors:
-        director_id = director["id"]
-        user_comment = request.form.get(f"comment_director_{director_id}")
-        director["user_input"] = user_comment
-        
-    session["favorites_directors"] = favorites_directors
-    return redirect("/favorites")
+
     
 @app.route("/random_movie", methods=["POST"])
 def random_movie():
@@ -204,6 +184,117 @@ def random_movie():
     random_movie = random.choice(popular_movies)
     random_movie_id = random_movie['id']
     return redirect(url_for('movie_detail', movie_id=random_movie_id))
+
+def get_similar_movies(favorites):
+
+    if not favorites:
+        return []
+
+    genre_counts = {} 
+    actor_counts = {} 
+    director_counts = {} 
+    recommended_movies = []
+    
+    for movie in favorites:
+        movie_id = movie["id"]
+        movie_url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={TMDB_API_KEY}"
+        credits_url = f"https://api.themoviedb.org/3/movie/{movie_id}/credits?api_key={TMDB_API_KEY}"
+
+        movie_data = requests.get(movie_url).json()
+        credits_data = requests.get(credits_url).json()
+        
+        for genre in movie_data.get("genres", []):
+            genre_counts[genre["id"]] = genre_counts.get(genre["id"], 0) + 1
+        
+        for actor in credits_data.get("cast", [])[:3]:  # Top 3 actors
+            actor_counts[actor["id"]] = actor_counts.get(actor["id"], 0) + 1
+        
+        for crew_member in credits_data.get("crew", []):
+            if crew_member["job"] == "Director":
+                director_counts[crew_member["id"]] = director_counts.get(crew_member["id"], 0) + 1
+
+    sorted_genres = sorted(genre_counts, key=genre_counts.get, reverse=True)
+    if sorted_genres:
+        genre_id = sorted_genres[0]
+        genre_movies_url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_API_KEY}&with_genres={genre_id}"
+        genre_movies = requests.get(genre_movies_url).json().get("results", [])
+        recommended_movies.extend(genre_movies)
+
+    sorted_actors = sorted(actor_counts, key=actor_counts.get, reverse=True)
+    if sorted_actors:
+        actor_id = sorted_actors[0]
+        actor_movies_url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_API_KEY}&with_cast={actor_id}"
+        actor_movies = requests.get(actor_movies_url).json().get("results", [])
+        recommended_movies.extend(actor_movies)
+
+    sorted_directors = sorted(director_counts, key=director_counts.get, reverse=True)
+    if sorted_directors:
+        director_id = sorted_directors[0]
+        director_movies_url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_API_KEY}&with_crew={director_id}"
+        director_movies = requests.get(director_movies_url).json().get("results", [])
+        recommended_movies.extend(director_movies)
+
+    seen_ids = set()
+    final_recommendations = []
+    for movie in recommended_movies:
+        if movie["id"] not in seen_ids and movie["id"] not in [m["id"] for m in favorites]: 
+            seen_ids.add(movie["id"])
+            final_recommendations.append(movie)
+
+    random.shuffle(final_recommendations)  
+
+    return final_recommendations[:10]
+    
+@app.route("/recommendations")
+def recommendations():
+    
+    favorite_movies = session.get("favorites_movies", [])
+    recommended_movies = get_similar_movies(favorite_movies)
+    return render_template("recommendations.html", recommended_movies=recommended_movies)
+    
+@app.route("/favorites/update", methods=["POST"])
+def update_favorites():
+
+    favorite_movies = session.get("favorites_movies", [])
+    for movie in favorite_movies:
+        movie_id = movie["id"]
+        user_comment = request.form.get(f"comment_movie_{movie_id}")
+        movie["user_input"] = user_comment
+
+    session["favorites_movies"] = favorite_movies
+    
+
+    return redirect("/favorites")
+    
+@app.route("/favorites/save", methods=["POST"])
+def save_favorites():
+    favorite_movies = session.get("favorites_movies", [])
+    favorite_directors = session.get("favorites_directors", [])
+
+    favorites_data = {
+        "favorite_movies": favorite_movies,
+        "favorite_directors": favorite_directors
+    }
+
+    file_path = "favorites.json"
+    with open(file_path, "w") as f:
+        json.dump(favorites_data, f)
+
+    return send_file(file_path, as_attachment=True, download_name="favorites.json")
+    
+@app.route("/favorites/load", methods=["POST"])
+def load_favorites():
+    file = request.files["file"]
+    if file and file.filename.endswith(".json"):
+        file_content = file.read().decode("utf-8")
+        favorites_data = json.loads(file_content)
+
+        session["favorites_movies"] = favorites_data.get("favorite_movies", [])
+        session["favorites_directors"] = favorites_data.get("favorite_directors", [])
+
+        return redirect(url_for("favorites"))
+
+    return "Invalid file format. Please upload a valid JSON file."
     
 if __name__ == "__main__":
     app.run(debug=True)

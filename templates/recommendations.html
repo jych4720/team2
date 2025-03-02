@@ -1,0 +1,20 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendations</title>
+</head>
+<body>
+    <h1>Recommended Movies</h1>
+    <ul>
+      <a href="/recommendations"> Discover More Movies</a>
+        {% for movie in recommended_movies %}
+        <li><a href="{{ url_for('movie_detail', movie_id=movie.id) }}">{{ movie.title }}</a></li>
+	<img src="https://image.tmdb.org/t/p/w200{{ movie.poster_path }}" alt="{{ movie.title }}">
+        {% endfor %}
+    </ul>
+<a href="/">Back to Home</a>
+
+
+</body>
+</html>
