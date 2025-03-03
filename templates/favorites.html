@@ -4,8 +4,8 @@
         {% for movie in favorite_movies %}
             <li>
                 <a href="{{ url_for('movie_detail', movie_id=movie.id) }}">
-                    <strong>{{ movie.title }}</strong>
-
+                  <strong>{{ movie.title }}</strong>
+		  </a>
                 <textarea name="comment_movie_{{ movie.id }}" placeholder="Write something about it">{{ movie.user_input }}</textarea>
                 <a href="/favorites/remove/movie/{{ movie.id }}">Remove</a>
             </li>

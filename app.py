@@ -9,7 +9,7 @@ import json
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-TMDB_API_KEY = "45f3b72c432ea9374c433274557cb55f"
+TMDB_API_KEY = os.environ.get("TMDB_API_KEY") 
 BASE_URL = "https://api.themoviedb.org/3"
 quotes = []
 quote_url = 'https://quoteapi.pythonanywhere.com/quotes'

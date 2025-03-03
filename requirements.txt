@@ -1,0 +1,4 @@
+Flask==3.0.3
+Flask-Session==0.8.0
+groq==0.18.0
+requests==2.31.0
